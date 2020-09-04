@@ -1,0 +1,39 @@
+package {{package}}.config.security;
+
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+@Component
+public class AuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
+
+    @Override
+    protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+        //TODO: 额外的身份验证检测，像下面这样
+        //if (userDetails instanceof User) {
+        //    final User user = (User) userDetails;
+        //    if (user.getTokenExpireDateTime() == null ||
+        //            !user.getTokenExpireDateTime().isAfter(LocalDateTime.now())) {
+        //        throw new BadCredentialsException("认证已过期，请重新登陆");
+        //    }
+        //} else {
+        //    throw new BadCredentialsException("认证已过期，请重新登陆");
+        //}
+    }
+
+    @Override
+    protected UserDetails retrieveUser(String token, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+        return null;
+        //TODO: 实现通过Token查询用户
+        //return Optional.ofNullable(token)
+        //      .map(String::valueOf)
+        //      .flatMap(userService::findByToken)
+        //      .orElseThrow(() -> new BadCredentialsException("认证已过期，请重新登陆"));
+    }
+}
+

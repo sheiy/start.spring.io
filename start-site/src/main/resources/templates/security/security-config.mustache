@@ -1,0 +1,148 @@
+package {{package}}.config.security;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import {{package}}.annotation.WithOutLogin;
+
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Configuration
+@EnableWebSecurity(debug = false)
+@SuppressWarnings("DefaultAnnotationParam")
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final Set<RequestMatcher> ignoreMatchers;
+
+    private final AuthenticationProvider provider;
+    private final AuthenticationFailureHandler authenticationFailureHandler;
+
+    public SecurityConfig(ApplicationContext applicationContext, AuthenticationProvider provider, AuthenticationFailureHandler authenticationFailureHandler) {
+        super();
+        this.provider = provider;
+        this.authenticationFailureHandler = authenticationFailureHandler;
+        //查找不需要登陆的接口
+        Map<String, Object> controllers = applicationContext.getBeansWithAnnotation(Controller.class);
+        Set<String> ignoreUrls = processController(controllers);
+        //错误页不需要登陆
+        ignoreUrls.add("/error");
+        //不需要登陆的RequestMatcher
+        ignoreMatchers = ignoreUrls.stream()
+                .map(AntPathRequestMatcher::new)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    protected void configure(final AuthenticationManagerBuilder auth) {
+        auth.authenticationProvider(provider);
+    }
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        //token无状态模式
+        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        //跨域
+        http.cors();
+        //关闭csrf
+        http.csrf().disable();
+        //关闭form登陆
+        http.formLogin().disable();
+        //关闭Basic登陆
+        http.httpBasic().disable();
+        //关闭登出
+        http.logout().disable();
+        //权限接口相关配置
+        http.authenticationProvider(provider)
+                .addFilterBefore(authenticationFilter(), AnonymousAuthenticationFilter.class)
+                .authorizeRequests()
+                .requestMatchers(ignoreMatchers.toArray(new RequestMatcher[]{}))
+                .permitAll().anyRequest().authenticated();
+    }
+
+    private Set<String> processController(Map<String, Object> controllers) {
+        HashSet<String> urls = new HashSet<>(controllers.size() << 1);
+        controllers.forEach((controllerName, controllerBean) -> {
+            Class<?> controller = controllerBean.getClass();
+            RequestMapping classRequestMapping = AnnotatedElementUtils.findMergedAnnotation(controller, RequestMapping.class);
+            WithOutLogin classIgnoreLogin = AnnotatedElementUtils.findMergedAnnotation(controller, WithOutLogin.class);
+            for (Method method : controller.getMethods()) {
+                RequestMapping methodRequestMapping = AnnotatedElementUtils.findMergedAnnotation(method, RequestMapping.class);
+                if (methodRequestMapping != null) {
+                    WithOutLogin methodIgnoreLogin = AnnotatedElementUtils.findMergedAnnotation(method, WithOutLogin.class);
+                    if (classIgnoreLogin != null || methodIgnoreLogin != null) {
+                        if (methodRequestMapping.path().length == 0) {
+                            if (classRequestMapping != null) {
+                                String[] classPaths = classRequestMapping.path();
+                                urls.addAll(Arrays.asList(classPaths));
+                            } else {
+                                urls.add("/");
+                            }
+                        } else {
+                            for (String path : methodRequestMapping.path()) {
+                                if (classRequestMapping != null && classRequestMapping.path().length != 0) {
+                                    String[] classPaths = classRequestMapping.path();
+                                    for (String classPath : classPaths) {
+                                        urls.add(classPath + path);
+                                    }
+                                } else {
+                                    urls.add(path);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        return urls;
+    }
+
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Collections.singletonList("*"));
+        configuration.setAllowedHeaders(Collections.singletonList("*"));
+        configuration.setAllowedMethods(Collections.singletonList("*"));
+        configuration.setAllowCredentials(true);
+        configuration.applyPermitDefaultValues();
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
+    AuthenticationFilter authenticationFilter() throws Exception {
+        //需要登陆的RequestMatcher
+        final Set<RequestMatcher> protectMatchers = ignoreMatchers.stream()
+                .map(NegatedRequestMatcher::new)
+                .collect(Collectors.toSet());
+        final RequestMatcher requestMatcher = new AndRequestMatcher(protectMatchers.toArray(new RequestMatcher[]{}));
+        final AuthenticationFilter filter = new AuthenticationFilter(requestMatcher);
+        filter.setAuthenticationManager(authenticationManager());
+        filter.setAuthenticationFailureHandler(authenticationFailureHandler);
+        return filter;
+    }
+
+}

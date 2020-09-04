@@ -1,0 +1,60 @@
+package {{package}}.exception;
+
+/**
+ * 此异常堆栈信息不会输出到日志
+ */
+public class BusinessException extends RuntimeException {
+
+    private String detail;
+
+    public BusinessException(String message) {
+        super(message);
+    }
+
+    public BusinessException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public BusinessException(Throwable cause) {
+        super(cause);
+    }
+
+    public BusinessException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    public BusinessException(String message, String detail) {
+        super(message);
+        this.detail = detail;
+    }
+
+    public BusinessException(String message, Throwable cause, String detail) {
+        super(message, cause);
+        this.detail = detail;
+    }
+
+    public BusinessException(Throwable cause, String detail) {
+        super(cause);
+        this.detail = detail;
+    }
+
+    public BusinessException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace, String detail) {
+        super(message, cause, enableSuppression, writableStackTrace);
+        this.detail = detail;
+    }
+
+    public boolean haveDetail() {
+        return detail != null;
+    }
+
+    @Override
+    public String toString() {
+        String s = getClass().getName();
+        String message = getLocalizedMessage();
+        return s + "(message=" + message + ", detail=" + this.getDetail() + ")";
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+}

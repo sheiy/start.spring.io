@@ -1,0 +1,35 @@
+package {{package}}.exception;
+
+public class SystemException extends WarnException {
+    public SystemException(String message) {
+        super(message);
+    }
+
+    public SystemException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SystemException(Throwable cause) {
+        super(cause);
+    }
+
+    public SystemException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    public SystemException(String message, String detail) {
+        super(message, detail);
+    }
+
+    public SystemException(String message, Throwable cause, String detail) {
+        super(message, cause, detail);
+    }
+
+    public SystemException(Throwable cause, String detail) {
+        super(cause, detail);
+    }
+
+    public SystemException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace, String detail) {
+        super(message, cause, enableSuppression, writableStackTrace, detail);
+    }
+}
