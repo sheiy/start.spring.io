@@ -12,7 +12,7 @@
     <name>start.spring.io website</name>
 
     <properties>
-        <docker.image.prefix>infrastructure</docker.image.prefix>
+        <docker.image.prefix>xlz35429674.3322.org:32706/infrastructure</docker.image.prefix>
     </properties>
 
     <dependencies>
@@ -111,7 +111,15 @@
                     </from>
                     <to>
                         <!--镜像名称和tag，使用了mvn内置变量${project.version}，表示当前工程的version-->
-                        <image>xlz35429674.3322.org:32706/${docker.image.prefix}/${artifactId}</image>
+                        <image>${docker.image.prefix}/${artifactId}</image>
+                        <tags>
+                            <tag>${version}</tag>
+                            <tag>latest</tag>
+                        </tags>
+                        <auth>
+                            <username>u</username>
+                            <password>p</password>
+                        </auth>
                     </to>
                     <!--容器相关的属性-->
                     <container>
