@@ -12,7 +12,9 @@
     <name>start.spring.io website</name>
 
     <properties>
+        <!-- Docker仓库及项目地址 -->
         <docker.image.prefix>xlz35429674.3322.org:32706/infrastructure</docker.image.prefix>
+        <jib.version>2.5.2</jib.version>
     </properties>
 
     <dependencies>
@@ -93,7 +95,7 @@
                 <!--文档：https://github.com/GoogleContainerTools/jib/tree/master/jib-maven-plugin#setup-->
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>2.5.2</version>
+                <version>${jib.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -106,17 +108,19 @@
                     <allowInsecureRegistries>true</allowInsecureRegistries>
                     <!--from节点用来设置镜像的基础镜像，相当于Docerkfile中的FROM关键字-->
                     <from>
-                        <!--使用openjdk官方镜像，tag是8-jdk-stretch，表示镜像的操作系统是debian9,装好了jdk8-->
+                        <!--使用openjdk官方镜像-->
                         <image>openjdk:11.0.8-slim-buster</image>
                     </from>
                     <to>
-                        <!--镜像名称和tag，使用了mvn内置变量${project.version}，表示当前工程的version-->
+                        <!--镜像名称-->
                         <image>${docker.image.prefix}/${artifactId}</image>
                         <tags>
+                            <!--镜像tag-->
                             <tag>${version}</tag>
                             <tag>latest</tag>
                         </tags>
                         <auth>
+                            <!--仓库账号密码-->
                             <username>u</username>
                             <password>p</password>
                         </auth>
