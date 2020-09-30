@@ -132,7 +132,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return source;
     }
 
-    @Bean
     AuthenticationFilter authenticationFilter() throws Exception {
         //需要登陆的RequestMatcher
         final Set<RequestMatcher> protectMatchers = ignoreMatchers.stream()
